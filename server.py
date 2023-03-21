@@ -1,4 +1,5 @@
-from flask import Flask, render_template
+import datetime
+from flask import Flask, render_template, jsonify
 from datetime import datetime
 from flask_cors import CORS
 # load_dotenv
@@ -29,8 +30,25 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type  = db.Column(db.String(50))
     name    = db.Column(db.String(50))
+    created_at = db.Column(db.DateTime, default=lambda:datetime.utcnow())
+    
+    def serialize(self):
+        return{
+            "id": self.id,
+            "type": self.type,
+            "name": self.name,
+            "created_at": self.created_at
+            }
+        
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
     def __repr__(self):
-        return "<User(id='%s', type='%s', name='%s')>" % (self.id, self.type, self.name)
+        return "<User   (id='%s', type='%s', name='%s' , created_at='%s')>" % (self.id, self.type, self.name, self.created_at.strftime('%Y-%m-%d %H:%M:%S %Z')
+)   
+
+with app.app_context():
+    db.create_all()
 
 class UserJob(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -38,13 +56,20 @@ class UserJob(db.Model):
     db.Column('job_id', db.Integer, db.ForeignKey('job.id'), primary_key=True)
     def __repr__(self):
         return "<UserJob(user_id='%s', job_id='%s')>" % (self.user_id, self.job_id)
-
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
+with app.app_context():
+    db.create_all()
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type  = db.Column(db.String(50))
     name    = db.Column(db.String(50))
     def __repr__(self):
         return "<Job(id='%s', type='%s', name='%s')>" % (self.id, self.type, self.name)
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
 with app.app_context():
     db.create_all()
 
@@ -63,8 +88,9 @@ def getUsers():
 
 @app.route('/api/users/<id>', methods=['GET'])
 def getUserByID(id):
-    user = db.session.execute(db.select(User).where(User.id == id)).scalar_one()
-    return render_template("./user.html", user=user)
+    user_db = User.query.get(id)
+    user = User(id=user_db.id, type=user_db.type, name=user_db.name)
+    return user.serialize(),200
 
 @app.route('/api/jobs/add', methods=['GET'])
 def addJob():
