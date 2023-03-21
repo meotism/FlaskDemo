@@ -1,0 +1,13 @@
+version: "3"
+services:  
+  db:
+    image: mysql:8.0-oracle
+    environment:
+      command: --default-authentication-plugin=mysql_native_password
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: db-dev
+    volumes:
+      - ./mount/mysql-data:/var/lib/mysql
+      - ./mysql.cnf:/etc/mysql/conf.d/mysql.cnf
+    ports:
+      - '3306:3306'
