@@ -37,7 +37,7 @@ class User(db.Model):
             "id": self.id,
             "type": self.type,
             "name": self.name,
-            "created_at": self.created_at
+            "created_at": self.created_at.strftime('%Y-%m-%d %H:%M:%S %Z')
             }
         
     def add(self):
